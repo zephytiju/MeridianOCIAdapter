@@ -5,13 +5,24 @@ on:
   push:
     tags:
       - "v[0-9]*.[0-9]*.[0-9]*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing immutable release tag to publish
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
   UV_VERSION: "0.12.1"
   SOURCE_DATE_EPOCH: "1787702400"
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -26,6 +37,8 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
           persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -39,9 +52,10 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --frozen --all-extras
       - name: Verify tag and quality gates
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
+          uv run python -c "import os, re; assert re.fullmatch(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)', os.environ['RELEASE_TAG'])"
+          test "$(git cat-file -t "refs/tags/${RELEASE_TAG}")" = tag
+          test "$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")" = "$(git rev-parse HEAD)"
           uv run python -c "import os; from meridian_storage.adapters.oci import __version__; assert os.environ['RELEASE_TAG'] == 'v' + __version__"
           uv run ruff format --check src tests scripts
           uv run ruff check src tests scripts
@@ -84,6 +98,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check out release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
       - name: Download release bundle
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -92,7 +112,6 @@ jobs:
       - name: Create immutable GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
         run: gh release create "$RELEASE_TAG" bundle/dist/* bundle/reports/* --verify-tag --generate-notes
 
   pypi:
@@ -111,7 +130,7 @@ jobs:
           name: release-bundle
           path: bundle
       - name: Publish with PyPI trusted publishing
-        uses: pypa/gh-action-pypi-publish@a892a5a61159132606e93a2fa6f4358831b04d26 # v1.14.2
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           packages-dir: bundle/dist/
           attestations: true
