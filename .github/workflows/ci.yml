@@ -1,0 +1,151 @@
+# SPDX-License-Identifier: Apache-2.0
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.12.1"
+  SOURCE_DATE_EPOCH: "1787702400"
+
+jobs:
+  quality:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --frozen --all-extras --python "${{ matrix.python-version }}"
+      - name: Format
+        run: uv run ruff format --check src tests scripts
+      - name: Lint
+        run: uv run ruff check src tests scripts
+      - name: Type check
+        run: uv run mypy src
+      - name: Deterministic tests and branch coverage
+        run: uv run pytest -m 'not integration'
+      - name: Contract evidence
+        if: matrix.python-version == '3.12'
+        run: uv run python scripts/verify_contracts.py
+      - name: Static security scan
+        if: matrix.python-version == '3.12'
+        run: uv run bandit -c pyproject.toml -r src
+      - name: Runtime dependency audit
+        if: matrix.python-version == '3.12'
+        run: |
+          uv export --frozen --no-dev --no-emit-project --output-file /tmp/runtime-requirements.txt
+          uv run pip-audit --strict --requirement /tmp/runtime-requirements.txt
+
+  reference-registry:
+    name: Distribution 3.1.1 conformance
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:3.1.1@sha256:1be55279f18a2fe1a74edf2664cac61c1bea305b7b4642dab412e7affdcb3e33
+        ports:
+          - 5000:5000
+        env:
+          REGISTRY_STORAGE_DELETE_ENABLED: "true"
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --frozen --all-extras
+      - name: Wait for registry
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5000/v2/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+      - name: Run genuine registry conformance
+        env:
+          MERIDIAN_OCI_TEST_ENDPOINT: http://127.0.0.1:5000
+          MERIDIAN_OCI_TEST_REPOSITORY: meridian-ci
+        run: uv run pytest tests/integration -m 'integration and not owner_service' --no-cov
+
+  package:
+    name: Reproducible package artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --frozen --all-extras
+      - name: Build twice
+        run: |
+          uv build --out-dir dist-a
+          uv build --out-dir dist-b
+          cmp dist-a/meridian_storage_oci-1.0.0-py3-none-any.whl dist-b/meridian_storage_oci-1.0.0-py3-none-any.whl
+          cmp dist-a/meridian_storage_oci-1.0.0.tar.gz dist-b/meridian_storage_oci-1.0.0.tar.gz
+      - name: Verify artifacts and evidence
+        run: |
+          mkdir -p reports
+          uv run python scripts/verify_artifacts.py dist-a > reports/artifacts.json
+          uv run python scripts/verify_contracts.py > reports/contracts.json
+          uv run python scripts/generate_sbom.py --output reports/sbom.spdx.json
+          sha256sum dist-a/* reports/*.json > reports/SHA256SUMS
+      - name: Install wheel in an isolated environment
+        run: |
+          uv venv /tmp/meridian-wheel-test
+          uv pip install --python /tmp/meridian-wheel-test/bin/python dist-a/meridian_storage_oci-1.0.0-py3-none-any.whl
+          /tmp/meridian-wheel-test/bin/python -c "from meridian_storage.adapters.oci import __version__; assert __version__ == '1.0.0'"
+      - name: Upload package evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meridian-storage-oci-artifacts
+          path: |
+            dist-a/*
+            reports/*
+          if-no-files-found: error
+          retention-days: 14

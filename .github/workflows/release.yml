@@ -1,0 +1,117 @@
+# SPDX-License-Identifier: Apache-2.0
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]*.[0-9]*.[0-9]*"
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.12.1"
+  SOURCE_DATE_EPOCH: "1787702400"
+
+jobs:
+  build:
+    name: Build and attest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --frozen --all-extras
+      - name: Verify tag and quality gates
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          uv run python -c "import os; from meridian_storage.adapters.oci import __version__; assert os.environ['RELEASE_TAG'] == 'v' + __version__"
+          uv run ruff format --check src tests scripts
+          uv run ruff check src tests scripts
+          uv run mypy src
+          uv run pytest -m 'not integration'
+      - name: Build reproducibly
+        run: |
+          uv build --out-dir dist-a
+          uv build --out-dir dist-b
+          cmp dist-a/meridian_storage_oci-1.0.0-py3-none-any.whl dist-b/meridian_storage_oci-1.0.0-py3-none-any.whl
+          cmp dist-a/meridian_storage_oci-1.0.0.tar.gz dist-b/meridian_storage_oci-1.0.0.tar.gz
+          mkdir -p dist reports
+          cp dist-a/* dist/
+          uv run python scripts/verify_artifacts.py dist > reports/artifacts.json
+          uv run python scripts/verify_contracts.py > reports/contracts.json
+          uv run python scripts/generate_sbom.py --output reports/sbom.spdx.json
+          sha256sum dist/* reports/*.json > reports/SHA256SUMS
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: "dist/*"
+      - name: Attest runtime SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: "dist/*"
+          sbom-path: "reports/sbom.spdx.json"
+      - name: Upload release bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-bundle
+          path: |
+            dist/*
+            reports/*
+          if-no-files-found: error
+
+  github-release:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release bundle
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-bundle
+          path: bundle
+      - name: Create immutable GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" bundle/dist/* bundle/reports/* --verify-tag --generate-notes
+
+  pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/meridian-storage-oci/
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-bundle
+          path: bundle
+      - name: Publish with PyPI trusted publishing
+        uses: pypa/gh-action-pypi-publish@a892a5a61159132606e93a2fa6f4358831b04d26 # v1.14.2
+        with:
+          packages-dir: bundle/dist/
+          attestations: true

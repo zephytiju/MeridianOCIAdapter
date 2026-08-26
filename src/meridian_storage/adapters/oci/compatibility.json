@@ -1,0 +1,28 @@
+{
+  "$comment": "SPDX-License-Identifier: Apache-2.0",
+  "adapterContractVersion": "1.0.0",
+  "adapterId": "oci-distribution",
+  "design": {
+    "catalogsRevision": 70,
+    "hldRevision": 56,
+    "objectLldRevision": 12
+  },
+  "distribution": "meridian-storage-oci",
+  "formatVersion": "meridian-storage-oci-compatibility.v1",
+  "objectCommon": {
+    "distribution": "meridian-storage-object-common",
+    "sdistSha256": "88768ec1ecb2009a179607f4e213f4f36fd1bbe61708b940626e1179d8ff0bdd",
+    "version": "1.0.0",
+    "wheelSha256": "62d838ab872a933d5c9f51b30de7389786400f49ed9f006b0cbab07fb67fce36"
+  },
+  "python": ">=3.12",
+  "standards": {
+    "ociDistribution": "1.1.1",
+    "ociImage": "1.1.1"
+  },
+  "transport": {
+    "distribution": "httpx",
+    "version": "0.28.1"
+  },
+  "version": "1.0.0"
+}
