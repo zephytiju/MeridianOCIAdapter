@@ -40,9 +40,9 @@ test = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/zephytiju/meridian-storage-oci#readme"
-Issues = "https://github.com/zephytiju/meridian-storage-oci/issues"
-Repository = "https://github.com/zephytiju/meridian-storage-oci"
+Documentation = "https://github.com/zephytiju/MeridianOCIAdapter#readme"
+Issues = "https://github.com/zephytiju/MeridianOCIAdapter/issues"
+Repository = "https://github.com/zephytiju/MeridianOCIAdapter"
 
 [project.entry-points."meridian_storage.adapters"]
 oci-distribution = "meridian_storage.adapters.oci:OciDistributionAdapter"
