@@ -106,7 +106,7 @@ def generate() -> dict[str, Any]:
         "SPDXID": "SPDXRef-DOCUMENT",
         "name": "meridian-storage-oci-1.0.0-runtime",
         "documentNamespace": (
-            "https://github.com/zephytiju/meridian-storage-oci/sbom/" + namespace_hash
+            "https://github.com/zephytiju/MeridianOCIAdapter/sbom/" + namespace_hash
         ),
         "creationInfo": {
             "created": _created(),
