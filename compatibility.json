@@ -11,9 +11,9 @@
   "formatVersion": "meridian-storage-oci-compatibility.v1",
   "objectCommon": {
     "distribution": "meridian-storage-object-common",
-    "sdistSha256": "88768ec1ecb2009a179607f4e213f4f36fd1bbe61708b940626e1179d8ff0bdd",
-    "version": "1.0.0",
-    "wheelSha256": "62d838ab872a933d5c9f51b30de7389786400f49ed9f006b0cbab07fb67fce36"
+    "sdistSha256": "1e03dce598c39bd35d66771d41a17251b6f187c081952fbf887dbe4ae940d676",
+    "version": "1.0.1",
+    "wheelSha256": "485dbb1e1f3f99abe3c0ed6aae9094c86b2e88bb934239453f6682126d583553"
   },
   "python": ">=3.12",
   "standards": {
@@ -24,5 +24,5 @@
     "distribution": "httpx",
     "version": "0.28.1"
   },
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
