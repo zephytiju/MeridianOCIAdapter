@@ -21,8 +21,8 @@ from meridian_storage.adapters.oci import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_COMMON_WHEEL = "485dbb1e1f3f99abe3c0ed6aae9094c86b2e88bb934239453f6682126d583553"
-EXPECTED_COMMON_SDIST = "1e03dce598c39bd35d66771d41a17251b6f187c081952fbf887dbe4ae940d676"
+EXPECTED_COMMON_WHEEL = "26422de8bce6dcf5e1a3cbf12614ec85ab99384cfcd64da9d91717aa849a8f4d"
+EXPECTED_COMMON_SDIST = "074d6f58a8aec2eb7977758c2eb1f6aaea039dc9c8c58742ebe8778b7c1f9764"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -51,11 +51,11 @@ def verify() -> dict[str, object]:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     project = pyproject["project"]
     assert project["name"] == "meridian-storage-oci"
-    assert project["version"] == __version__ == "1.0.1"
+    assert project["version"] == __version__ == "1.0.2"
     assert project["license"] == "Apache-2.0"
     assert project["dependencies"] == [
         "httpx==0.28.1",
-        "meridian-storage-object-common==1.0.1",
+        "meridian-storage-object-common==1.0.2",
     ]
     project_manifests = sorted(
         path for path in ROOT.rglob("pyproject.toml") if ".venv" not in path.relative_to(ROOT).parts
@@ -82,7 +82,7 @@ def verify() -> dict[str, object]:
     assert common == {
         "distribution": "meridian-storage-object-common",
         "sdistSha256": EXPECTED_COMMON_SDIST,
-        "version": "1.0.1",
+        "version": "1.0.2",
         "wheelSha256": EXPECTED_COMMON_WHEEL,
     }
     assert root_compatibility["standards"] == {
@@ -94,7 +94,7 @@ def verify() -> dict[str, object]:
     assert contract["distribution"] == project["name"]
     assert contract["version"] == project["version"]
     assert contract["adapterId"] == ADAPTER_ID
-    assert contract["objectCommon"] == "1.0.1"
+    assert contract["objectCommon"] == "1.0.2"
     assert contract["operations"] == ["delete", "get", "list", "put", "read_range", "stat"]
 
     entry_points = metadata.entry_points(group="meridian_storage.adapters")
@@ -102,6 +102,9 @@ def verify() -> dict[str, object]:
     assert len(selected) == 1
     assert selected[0].value == "meridian_storage.adapters.oci:OciDistributionAdapter"
     assert metadata.version("meridian-storage-oci") == __version__
+    assert metadata.version("meridian-storage-object-common") == "1.0.2"
+    assert metadata.version("meridian-storage-core") == "1.0.1"
+    assert metadata.version("meridian-storage-semantics") == "2.0.0"
 
     source_files = sorted((ROOT / "src").rglob("*.py"))
     test_files = sorted((ROOT / "tests").rglob("*.py"))

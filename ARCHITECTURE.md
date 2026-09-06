@@ -4,7 +4,7 @@
 
 This package is the Meridian V1 Object Adapter for an Open Container
 Initiative Distribution 1.1 registry. It implements the released
-`meridian-storage-object-common==1.0.0` contract and has the stable Adapter id
+`meridian-storage-object-common==1.0.2` contract and has the stable Adapter id
 `oci-distribution`.
 
 ## Authority boundary

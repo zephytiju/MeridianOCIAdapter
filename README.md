@@ -8,7 +8,7 @@ implements streaming blob upload and download, digest verification, OCI image
 manifests for non-container artifacts, exact versions, range reads, bounded
 maintenance inventory, policy-aware deletion, resumable multipart upload,
 capability probes, and logical migration helpers behind the released
-`meridian-storage-object-common==1.0.0` contract.
+`meridian-storage-object-common==1.0.2` contract.
 
 This repository publishes exactly one Python distribution. Provider endpoints,
 repository names, credentials, upload locations, tags, and manifest digests are
@@ -17,7 +17,7 @@ private binding state and never appear in consumer Object results or errors.
 ## Install
 
 ```console
-python -m pip install meridian-storage-oci==1.0.0
+python -m pip install meridian-storage-oci==1.0.2
 ```
 
 Python 3.12 or newer is required.

@@ -12,7 +12,7 @@
     }
   },
   "formatVersion": "meridian-storage-oci-public-api.v1",
-  "objectCommon": "1.0.1",
+  "objectCommon": "1.0.2",
   "operations": [
     "delete",
     "get",
@@ -26,5 +26,5 @@
     "ociDistribution": "1.1.1",
     "ociImage": "1.1.1"
   },
-  "version": "1.0.1"
+  "version": "1.0.2"
 }

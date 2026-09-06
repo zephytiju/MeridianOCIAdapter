@@ -5,6 +5,13 @@
 Acceptance is layered so deterministic tests are not misrepresented as a real
 service result.
 
+## Compatible release set
+
+OCI 1.0.2 consumes the published Object Common 1.0.2 fixtures and resolves
+Core 1.0.1 with Semantics 2.0.0. The package gate installs the built wheel
+with normal registry dependency resolution and checks the installed closure.
+No sibling source, dependency override or metadata patch is used.
+
 ## Deterministic layer
 
 `tests/support/registry.py` is an HTTP-level OCI Distribution harness. It
