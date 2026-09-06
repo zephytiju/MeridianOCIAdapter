@@ -126,8 +126,8 @@ jobs:
         run: |
           uv build --out-dir dist-a
           uv build --out-dir dist-b
-          cmp dist-a/meridian_storage_oci-1.0.1-py3-none-any.whl dist-b/meridian_storage_oci-1.0.1-py3-none-any.whl
-          cmp dist-a/meridian_storage_oci-1.0.1.tar.gz dist-b/meridian_storage_oci-1.0.1.tar.gz
+          cmp dist-a/meridian_storage_oci-1.0.2-py3-none-any.whl dist-b/meridian_storage_oci-1.0.2-py3-none-any.whl
+          cmp dist-a/meridian_storage_oci-1.0.2.tar.gz dist-b/meridian_storage_oci-1.0.2.tar.gz
       - name: Verify artifacts and evidence
         run: |
           mkdir -p reports
@@ -138,8 +138,10 @@ jobs:
       - name: Install wheel in an isolated environment
         run: |
           uv venv /tmp/meridian-wheel-test
-          uv pip install --python /tmp/meridian-wheel-test/bin/python dist-a/meridian_storage_oci-1.0.1-py3-none-any.whl
-          /tmp/meridian-wheel-test/bin/python -c "from meridian_storage.adapters.oci import __version__; assert __version__ == '1.0.1'"
+          uv pip install --python /tmp/meridian-wheel-test/bin/python dist-a/meridian_storage_oci-1.0.2-py3-none-any.whl
+          uv pip check --python /tmp/meridian-wheel-test/bin/python
+          cd /tmp
+          /tmp/meridian-wheel-test/bin/python -c "from meridian_storage.adapters.oci import __version__; assert __version__ == '1.0.2'"
       - name: Upload package evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

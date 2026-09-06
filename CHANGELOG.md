@@ -2,6 +2,11 @@
 
 # Changelog
 
+## 1.0.2
+
+- Consume released Object Common 1.0.2 with Core 1.0.1 and Semantics 2.0.0; align dependency locks, compatibility hashes and release evidence inputs.
+- Preserve the Object operations, OCI wire formats, provider conformance and immutable publication behavior.
+
 ## 1.0.1
 
 - Accept the released Object Common 1.0.1 compatibility fix so ResourceStore can retain its S3 and OCI installation extras in one tested dependency set. No OCI operation or wire-format changes.

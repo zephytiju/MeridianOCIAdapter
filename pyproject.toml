@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "meridian-storage-oci"
-version = "1.0.1"
+version = "1.0.2"
 description = "OCI Distribution object adapter for Meridian"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
   "httpx==0.28.1",
-  "meridian-storage-object-common==1.0.1",
+  "meridian-storage-object-common==1.0.2",
 ]
 
 [project.optional-dependencies]
