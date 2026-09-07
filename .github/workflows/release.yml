@@ -65,8 +65,8 @@ jobs:
         run: |
           uv build --out-dir dist-a
           uv build --out-dir dist-b
-          cmp dist-a/meridian_storage_oci-1.0.2-py3-none-any.whl dist-b/meridian_storage_oci-1.0.2-py3-none-any.whl
-          cmp dist-a/meridian_storage_oci-1.0.2.tar.gz dist-b/meridian_storage_oci-1.0.2.tar.gz
+          cmp dist-a/meridian_storage_oci-1.0.3-py3-none-any.whl dist-b/meridian_storage_oci-1.0.3-py3-none-any.whl
+          cmp dist-a/meridian_storage_oci-1.0.3.tar.gz dist-b/meridian_storage_oci-1.0.3.tar.gz
           mkdir -p dist reports
           cp dist-a/* dist/
           uv run python scripts/verify_artifacts.py dist > reports/artifacts.json

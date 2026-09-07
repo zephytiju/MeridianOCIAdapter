@@ -8,7 +8,7 @@
   "engineVersion": "1.1.1",
   "entryPoints": {
     "adapters": {
-      "oci-distribution": "meridian_storage.adapters.oci:OciDistributionAdapter"
+      "oci-distribution": "meridian_storage.adapters.oci._factory:OciAdapterFactory"
     }
   },
   "formatVersion": "meridian-storage-oci-public-api.v1",
@@ -26,5 +26,5 @@
     "ociDistribution": "1.1.1",
     "ociImage": "1.1.1"
   },
-  "version": "1.0.2"
+  "version": "1.0.3"
 }

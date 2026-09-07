@@ -103,6 +103,33 @@ jobs:
           MERIDIAN_OCI_TEST_REPOSITORY: meridian-ci
         run: uv run pytest tests/integration -m 'integration and not owner_service' --no-cov
 
+      - name: Build candidate and install with released S3 in a clean environment
+        run: |
+          uv build --out-dir dist-runtime
+          uv venv /tmp/oci-runtime-test
+          uv pip install --python /tmp/oci-runtime-test/bin/python "dist-runtime/meridian_storage_oci-1.0.3-py3-none-any.whl[test]" meridian-storage-s3==1.0.2
+          uv pip check --python /tmp/oci-runtime-test/bin/python
+      - name: Start disposable S3 endpoint for discovery coexistence
+        run: |
+          docker run --rm -d --name oci-coexist-s3 -p 19000:9000 \
+            -e MINIO_ROOT_USER=meridian-test -e MINIO_ROOT_PASSWORD=meridian-test-password \
+            minio/minio@sha256:a1ea29fa28355559ef137d71fc570e508a214ec84ff8083e39bc5428980b015e server /data
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:19000/minio/health/ready; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Verify installed Core Object path with both adapters
+        env:
+          MERIDIAN_OCI_TEST_ENDPOINT: http://127.0.0.1:5000
+          MERIDIAN_OCI_TEST_REPOSITORY: meridian-installed
+          MERIDIAN_S3_TEST_ENDPOINT: http://127.0.0.1:19000
+        run: |
+          mkdir -p /tmp/oci-runtime-verification
+          cp -R tests /tmp/oci-runtime-verification/tests
+          cd /tmp/oci-runtime-verification
+          /tmp/oci-runtime-test/bin/python -m pytest tests/integration -m 'not owner_service' --no-cov -o addopts= --import-mode=importlib
+
   package:
     name: Reproducible package artifacts
     runs-on: ubuntu-latest
@@ -126,8 +153,8 @@ jobs:
         run: |
           uv build --out-dir dist-a
           uv build --out-dir dist-b
-          cmp dist-a/meridian_storage_oci-1.0.2-py3-none-any.whl dist-b/meridian_storage_oci-1.0.2-py3-none-any.whl
-          cmp dist-a/meridian_storage_oci-1.0.2.tar.gz dist-b/meridian_storage_oci-1.0.2.tar.gz
+          cmp dist-a/meridian_storage_oci-1.0.3-py3-none-any.whl dist-b/meridian_storage_oci-1.0.3-py3-none-any.whl
+          cmp dist-a/meridian_storage_oci-1.0.3.tar.gz dist-b/meridian_storage_oci-1.0.3.tar.gz
       - name: Verify artifacts and evidence
         run: |
           mkdir -p reports
@@ -138,10 +165,10 @@ jobs:
       - name: Install wheel in an isolated environment
         run: |
           uv venv /tmp/meridian-wheel-test
-          uv pip install --python /tmp/meridian-wheel-test/bin/python dist-a/meridian_storage_oci-1.0.2-py3-none-any.whl
+          uv pip install --python /tmp/meridian-wheel-test/bin/python dist-a/meridian_storage_oci-1.0.3-py3-none-any.whl
           uv pip check --python /tmp/meridian-wheel-test/bin/python
           cd /tmp
-          /tmp/meridian-wheel-test/bin/python -c "from meridian_storage.adapters.oci import __version__; assert __version__ == '1.0.2'"
+          /tmp/meridian-wheel-test/bin/python -c "from meridian_storage.adapters.oci import __version__; assert __version__ == '1.0.3'"
       - name: Upload package evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

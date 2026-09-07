@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "meridian-storage-oci"
-version = "1.0.2"
+version = "1.0.3"
 description = "OCI Distribution object adapter for Meridian"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -45,7 +45,7 @@ Issues = "https://github.com/zephytiju/MeridianOCIAdapter/issues"
 Repository = "https://github.com/zephytiju/MeridianOCIAdapter"
 
 [project.entry-points."meridian_storage.adapters"]
-oci-distribution = "meridian_storage.adapters.oci:OciDistributionAdapter"
+oci-distribution = "meridian_storage.adapters.oci._factory:OciAdapterFactory"
 
 [tool.hatch.build]
 include = [

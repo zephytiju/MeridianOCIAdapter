@@ -17,7 +17,7 @@ private binding state and never appear in consumer Object results or errors.
 ## Install
 
 ```console
-python -m pip install meridian-storage-oci==1.0.2
+python -m pip install meridian-storage-oci==1.0.3
 ```
 
 Python 3.12 or newer is required.

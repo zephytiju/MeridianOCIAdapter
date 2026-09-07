@@ -2,6 +2,12 @@
 
 # Changelog
 
+## 1.0.3
+
+- Restore normal Core discovery using a private no-argument AdapterFactory and the released runtime/session SPI.
+- Bind the existing OCI data plane through deployment settings and resolved secrets, retaining Object semantics and authenticated read-only startup probes.
+- Verify normal Core/Object execution against Distribution 3.1.1, including installed coexistence with S3.
+
 ## 1.0.2
 
 - Consume released Object Common 1.0.2 with Core 1.0.1 and Semantics 2.0.0; align dependency locks, compatibility hashes and release evidence inputs.
