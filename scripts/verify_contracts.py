@@ -19,6 +19,7 @@ from meridian_storage.adapters.oci import (
     compatibility_document,
     configured_capability_manifest,
 )
+from meridian_storage.spi import AdapterFactory
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_COMMON_WHEEL = "26422de8bce6dcf5e1a3cbf12614ec85ab99384cfcd64da9d91717aa849a8f4d"
@@ -51,7 +52,7 @@ def verify() -> dict[str, object]:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     project = pyproject["project"]
     assert project["name"] == "meridian-storage-oci"
-    assert project["version"] == __version__ == "1.0.2"
+    assert project["version"] == __version__ == "1.0.3"
     assert project["license"] == "Apache-2.0"
     assert project["dependencies"] == [
         "httpx==0.28.1",
@@ -100,7 +101,8 @@ def verify() -> dict[str, object]:
     entry_points = metadata.entry_points(group="meridian_storage.adapters")
     selected = [entry for entry in entry_points if entry.name == ADAPTER_ID]
     assert len(selected) == 1
-    assert selected[0].value == "meridian_storage.adapters.oci:OciDistributionAdapter"
+    assert selected[0].value == "meridian_storage.adapters.oci._factory:OciAdapterFactory"
+    assert isinstance(selected[0].load()(), AdapterFactory)
     assert metadata.version("meridian-storage-oci") == __version__
     assert metadata.version("meridian-storage-object-common") == "1.0.2"
     assert metadata.version("meridian-storage-core") == "1.0.1"

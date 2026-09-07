@@ -66,3 +66,42 @@ repository.
 The capability manifest is configuration-sensitive. Deletion is absent until
 explicitly enabled, and retention enforcement is absent until the deployment
 declares that owner-managed controls were verified.
+
+## Normal Core startup
+
+The installed `meridian_storage.adapters` entry point loads a private factory.
+Core supplies `AdapterCreateContext`; neither consumers nor ResourceStore inject
+an adapter factory. The existing `OciDistributionAdapter(binding)` composition
+API remains available with the same signature and behavior.
+
+For `meridian-config.v1` deployment configuration:
+
+- `adapterId` is `oci-distribution`, `adapterContract` is `1.0.0`, and the existing
+  engine profile/version remain `oci-distribution` / `1.1.1`.
+- `endpoint` supplies the registry origin; `physicalNamespace` supplies the
+  existing repository. Resolve `serviceRef` in deployment composition first.
+- `settings.resource` is the one logical Object Resource served by the binding,
+  for example `object:resources.objects`. Placement must select that exact
+  resource. This preserves the existing one-resource-per-OCI-binding model.
+- Optional settings map to the existing private fields: `chunkSize`,
+  `maxObjectBytes`, `maxRangeBytes`, `maxManifestBytes`, `maxMetadataBytes`,
+  `maxListPageSize`, `maxScanTags`, `maxMultipartParts`, `conditionalCreateMode`,
+  `deletionEnabled`, `retentionEnforced`, and `referrersRequired`. Defaults and
+  validation are unchanged. Unknown settings fail closed.
+- `client.operationTimeoutMs` supplies the HTTP timeout. TLS `server` uses the
+  resolved CA material in a private temporary file removed on close or failed
+  startup. `disabled` requires HTTP; mutual TLS is unsupported by this bridge.
+- `settings.authMode` maps to existing credentials: `basic` (default) takes the
+  resolved UTF-8 identity and credential as username/password; `bearer` takes
+  the resolved credential as token; `anonymous` explicitly selects anonymous
+  access. Core still resolves its required opaque secret references. Credentials
+  are never accepted in settings. This does not change secret provisioning or
+  token refresh ownership.
+
+Startup runs only the existing authenticated read-only probe. Deep registry
+verification remains an explicit deployment job. Core checks the existing
+configured capability fingerprint, and physical verification returns opaque,
+configuration-sensitive fingerprints without exposing endpoints or repositories.
+The bridge uses Object Common's process-local default payload registry, matching
+ResourceStore's normal Object path. Explicit private binding APIs retain their
+existing custom credential and cursor-key options.

@@ -14,8 +14,8 @@ def test_contract_verification_document() -> None:
 
     assert evidence["status"] == "passed"
     assert evidence["adapterId"] == "oci-distribution"
-    assert evidence["version"] == "1.0.2"
-    assert evidence["sourceFileCount"] == 17
+    assert evidence["version"] == "1.0.3"
+    assert evidence["sourceFileCount"] == 18
     assert evidence["testFileCount"] >= 18
     assert str(evidence["contractSha256"]).isalnum()
 
@@ -29,7 +29,7 @@ def test_runtime_sbom_is_deterministic(monkeypatch: object) -> None:
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
     assert first["spdxVersion"] == "SPDX-2.3"
     packages = {item["name"]: item["versionInfo"] for item in first["packages"]}
-    assert packages["meridian-storage-oci"] == "1.0.2"
+    assert packages["meridian-storage-oci"] == "1.0.3"
     assert packages["meridian-storage-object-common"] == "1.0.2"
     assert packages["httpx"] == "0.28.1"
     assert "pytest" not in packages
