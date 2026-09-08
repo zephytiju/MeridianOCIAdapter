@@ -1,0 +1,194 @@
+{
+  "fingerprint": "sha256:36a0fef4742a21b3acfae29607361ac6eaee861446f1a78fd2064571e03e6ff5",
+  "manifest": {
+    "availableOperationContracts": [
+      "meridian.object.delete",
+      "meridian.object.get",
+      "meridian.object.list",
+      "meridian.object.put",
+      "meridian.object.read_range",
+      "meridian.object.stat"
+    ],
+    "descriptor": {
+      "adapterContractVersion": "1.0.0",
+      "adapterId": "oci-distribution",
+      "capabilities": [
+        {
+          "cursorBehavior": "none",
+          "extensions": {
+            "design.catalogRevision": 70,
+            "design.hldRevision": 56,
+            "design.objectLldRevision": 12,
+            "oci.distributionSpec": "1.1.1",
+            "oci.imageSpec": "1.1.1"
+          },
+          "guarantees": [
+            "object.exact-version-delete",
+            "object.retention-intent"
+          ],
+          "healthProbes": [
+            "authenticated",
+            "content-management"
+          ],
+          "limits": {},
+          "migrationBehavior": "external-policy",
+          "operationContract": "meridian.object.delete",
+          "operationVersions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "cursorBehavior": "none",
+          "extensions": {
+            "design.catalogRevision": 70,
+            "design.hldRevision": 56,
+            "design.objectLldRevision": 12,
+            "oci.distributionSpec": "1.1.1",
+            "oci.imageSpec": "1.1.1"
+          },
+          "guarantees": [
+            "object.digest-verification",
+            "object.streaming"
+          ],
+          "healthProbes": [
+            "authenticated",
+            "pull"
+          ],
+          "limits": {
+            "object.max-object-bytes": 5497558138880
+          },
+          "migrationBehavior": "logical-export-import",
+          "operationContract": "meridian.object.get",
+          "operationVersions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "cursorBehavior": "opaque-stable",
+          "extensions": {
+            "design.catalogRevision": 70,
+            "design.hldRevision": 56,
+            "design.objectLldRevision": 12,
+            "oci.distributionSpec": "1.1.1",
+            "oci.imageSpec": "1.1.1"
+          },
+          "guarantees": [
+            "object.bounded-prefix-list"
+          ],
+          "healthProbes": [
+            "authenticated",
+            "content-discovery"
+          ],
+          "limits": {
+            "object.max-list-page-size": 1000
+          },
+          "migrationBehavior": "external",
+          "operationContract": "meridian.object.list",
+          "operationVersions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "cursorBehavior": "none",
+          "extensions": {
+            "conditionalCreateMode": "single-writer",
+            "design.catalogRevision": 70,
+            "design.hldRevision": 56,
+            "design.objectLldRevision": 12,
+            "oci.distributionSpec": "1.1.1",
+            "oci.imageSpec": "1.1.1",
+            "retentionEnforcement": false
+          },
+          "guarantees": [
+            "object.conditional-create",
+            "object.digest-sha256",
+            "object.immutability-intent",
+            "object.metadata-after-commit",
+            "object.multipart",
+            "object.retention-intent",
+            "object.streaming"
+          ],
+          "healthProbes": [
+            "authenticated",
+            "push-pull",
+            "range"
+          ],
+          "limits": {
+            "object.max-multipart-part-bytes": 4194304,
+            "object.max-multipart-parts": 10000,
+            "object.max-object-bytes": 5497558138880,
+            "object.max-user-metadata-entries": 128
+          },
+          "migrationBehavior": "logical-export-import",
+          "operationContract": "meridian.object.put",
+          "operationVersions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "cursorBehavior": "none",
+          "extensions": {
+            "design.catalogRevision": 70,
+            "design.hldRevision": 56,
+            "design.objectLldRevision": 12,
+            "oci.distributionSpec": "1.1.1",
+            "oci.imageSpec": "1.1.1"
+          },
+          "guarantees": [
+            "object.digest-verification",
+            "object.range-read"
+          ],
+          "healthProbes": [
+            "authenticated",
+            "range"
+          ],
+          "limits": {
+            "object.max-range-bytes": 268435456
+          },
+          "migrationBehavior": "external",
+          "operationContract": "meridian.object.read_range",
+          "operationVersions": [
+            "1.0.0"
+          ]
+        },
+        {
+          "cursorBehavior": "none",
+          "extensions": {
+            "design.catalogRevision": 70,
+            "design.hldRevision": 56,
+            "design.objectLldRevision": 12,
+            "oci.distributionSpec": "1.1.1",
+            "oci.imageSpec": "1.1.1"
+          },
+          "guarantees": [
+            "object.digest-verification"
+          ],
+          "healthProbes": [
+            "authenticated",
+            "pull"
+          ],
+          "limits": {},
+          "migrationBehavior": "external",
+          "operationContract": "meridian.object.stat",
+          "operationVersions": [
+            "1.0.0"
+          ]
+        }
+      ],
+      "driver": "httpx",
+      "supportedEngineVersions": {
+        "oci-distribution": [
+          "1.1.1"
+        ]
+      }
+    },
+    "engineProfile": "oci-distribution",
+    "engineVersion": "1.1.1",
+    "extensions": {
+      "bindingFingerprint": "sha256:f4a380e45a2f95353fc03a7f7eed63e6c67cf71fb7e37fa0d2cc3f256f9f651d",
+      "referrersRequired": false,
+      "verification": "configured"
+    },
+    "formatVersion": "meridian-adapter-capabilities.v1"
+  }
+}

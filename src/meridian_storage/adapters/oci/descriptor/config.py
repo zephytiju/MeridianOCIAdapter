@@ -101,6 +101,8 @@ class OciDistributionBinding:
     retention_enforced: bool = False
     referrers_required: bool = False
     cursor_signing_key: bytes | None = field(default=None, repr=False)
+    registry_release: str | None = None
+    registry_image: str | None = None
 
     def __post_init__(self) -> None:
         resource = ResourceRef.parse(self.resource, catalog="object")
@@ -142,6 +144,23 @@ class OciDistributionBinding:
         ):
             if not isinstance(getattr(self, name), bool):
                 raise TypeError(f"{name} must be boolean")
+        if self.registry_release is not None and (
+            not isinstance(self.registry_release, str)
+            or not self.registry_release.strip()
+            or len(self.registry_release) > 128
+            or any(ord(character) < 32 for character in self.registry_release)
+        ):
+            raise ValueError("registry_release must be a non-empty single-line provenance label")
+        if self.registry_image is not None and (
+            not isinstance(self.registry_image, str)
+            or len(self.registry_image) > 512
+            or "://" in self.registry_image
+            or re.fullmatch(
+                r"[a-zA-Z0-9][a-zA-Z0-9._/:\-]*@sha256:[0-9a-f]{64}", self.registry_image
+            )
+            is None
+        ):
+            raise ValueError("registry_image must be an immutable image reference with SHA-256")
         cursor_key = self.cursor_signing_key
         if cursor_key is None:
             cursor_key = secrets.token_bytes(32)

@@ -104,7 +104,7 @@ def generate() -> dict[str, Any]:
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
         "SPDXID": "SPDXRef-DOCUMENT",
-        "name": "meridian-storage-oci-1.0.3-runtime",
+        "name": "meridian-storage-oci-1.1.0-runtime",
         "documentNamespace": (
             "https://github.com/zephytiju/MeridianOCIAdapter/sbom/" + namespace_hash
         ),

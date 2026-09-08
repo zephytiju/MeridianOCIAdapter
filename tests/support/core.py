@@ -11,13 +11,21 @@ from meridian_storage.spi import AdapterCreateContext, SecretValue
 RESOURCE = ResourceRef("object", "resources", "objects")
 
 
-def binding_config(endpoint="https://registry.test", repository="meridian/test"):
+def binding_config(
+    endpoint="https://registry.test",
+    repository="meridian/test",
+    *,
+    registry_release=None,
+    registry_image=None,
+):
     config = OciDistributionBinding(
         resource=RESOURCE,
         endpoint=endpoint,
         repository=repository,
         allow_insecure_http=endpoint.startswith("http:"),
         deletion_enabled=True,
+        registry_release=registry_release,
+        registry_image=registry_image,
     )
     return BindingConfig(
         id="objects",
@@ -40,7 +48,13 @@ def binding_config(endpoint="https://registry.test", repository="meridian/test")
         required_capability_fingerprint=configured_capability_manifest(config).fingerprint,
         required_physical_fingerprint=None,
         compatibility_pins={"adapterContract": "1.0.0", "engineVersion": "1.1.1"},
-        settings={"resource": RESOURCE.canonical, "authMode": "anonymous", "deletionEnabled": True},
+        settings={
+            "resource": RESOURCE.canonical,
+            "authMode": "anonymous",
+            "deletionEnabled": True,
+            **({"registryRelease": registry_release} if registry_release is not None else {}),
+            **({"registryImage": registry_image} if registry_image is not None else {}),
+        },
         extensions={},
     )
 

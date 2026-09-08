@@ -89,3 +89,9 @@ See [architecture](ARCHITECTURE.md),
 
 Copyright 2026 Meridian contributors. Licensed under Apache License 2.0; see
 [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+
+Release 1.1.0 separates registry software provenance from the Distribution 1.1.1
+protocol and consumes the public Core 1.1.0-compatible dependency closure. See
+[configuration](docs/configuration.md#protocol-and-registry-release-selection-110)
+and the [gate inventory and exact registry selections](docs/conformance.md#deployment-owned-release-repair-110).

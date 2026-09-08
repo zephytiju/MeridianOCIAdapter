@@ -72,6 +72,8 @@ def _adapter(prefix: str) -> OciDistributionAdapter:
             allow_insecure_http=urlsplit(endpoint).scheme == "http",
             verify_tls=os.getenv(f"{prefix}_VERIFY_TLS", "true").lower() != "false",
             deletion_enabled=True,
+            registry_release=os.getenv(f"{prefix}_RELEASE"),
+            registry_image=os.getenv(f"{prefix}_IMAGE"),
             referrers_required=os.getenv(f"{prefix}_REQUIRE_REFERRERS", "false").lower() == "true",
         )
     )
@@ -114,3 +116,23 @@ def _cleanup_unique_repository(adapter: OciDistributionAdapter) -> None:
             except ObjectNotFound:
                 continue
     raise AssertionError("unique OCI conformance repository cleanup did not converge")
+
+
+@pytest.mark.integration
+def test_required_referrers_rejects_reference_registry() -> None:
+    """These exact reference images have no native referrers API; fail closed."""
+    from dataclasses import replace
+
+    with (
+        _adapter("MERIDIAN_OCI_TEST") as original,
+        OciDistributionAdapter(replace(original.binding, referrers_required=True)) as adapter,
+    ):
+        try:
+            report = OciDistributionProbe(adapter.transport).deep()
+            assert not report.passed, report.to_dict()
+            assert report.push_pull
+            assert report.range_read
+            assert not report.referrers
+            assert report.failure == "ValueError"
+        finally:
+            _cleanup_unique_repository(adapter)

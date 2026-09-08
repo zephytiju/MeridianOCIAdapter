@@ -12,7 +12,7 @@ from email.parser import BytesParser
 from pathlib import Path
 
 EXPECTED_NAME = "meridian-storage-oci"
-EXPECTED_VERSION = "1.0.3"
+EXPECTED_VERSION = "1.1.0"
 PACKAGE_PATH = "meridian_storage/adapters/oci/"
 
 

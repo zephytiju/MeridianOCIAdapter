@@ -133,6 +133,11 @@ def configured_capability_manifest(binding: OciDistributionBinding) -> Capabilit
     ]
     if binding.deletion_enabled:
         operations.append("meridian.object.delete")
+    selected: dict[str, str] = {}
+    if binding.registry_release is not None:
+        selected["release"] = binding.registry_release
+    if binding.registry_image is not None:
+        selected["image"] = binding.registry_image
     return CapabilityManifest(
         descriptor=oci_distribution_descriptor(binding),
         engine_profile=ENGINE_PROFILE,
@@ -142,6 +147,8 @@ def configured_capability_manifest(binding: OciDistributionBinding) -> Capabilit
             "verification": "configured",
             "bindingFingerprint": binding.public_fingerprint,
             "referrersRequired": binding.referrers_required,
+            # Preserve legacy fingerprints when no new provenance is selected.
+            **({"selectedRegistry": selected} if selected else {}),
         },
     )
 

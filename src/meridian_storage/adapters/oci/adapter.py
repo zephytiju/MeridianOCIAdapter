@@ -315,6 +315,18 @@ class OciDistributionAdapter:
             "capabilityFingerprint": self._manifest.fingerprint,
             "engineProfile": "oci-distribution",
             "engineVersion": "1.1.1",
+            "distributionSpec": "1.1.1",
+            "registryReleaseObservation": "unavailable",
+            **(
+                {"selectedRegistryRelease": self.binding.registry_release}
+                if self.binding.registry_release is not None
+                else {}
+            ),
+            **(
+                {"selectedRegistryImage": self.binding.registry_image}
+                if self.binding.registry_image is not None
+                else {}
+            ),
         }
         metadata = ObjectMetadata(
             object_ref=ObjectReference(self._semantic_resource(), object_id, identity.digest),

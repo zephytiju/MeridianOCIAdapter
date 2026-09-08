@@ -63,11 +63,19 @@ jobs:
           uv run pip-audit --strict --requirement /tmp/runtime-requirements.txt
 
   reference-registry:
-    name: Distribution 3.1.1 conformance
+    name: Distribution ${{ matrix.registry.version }} conformance
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        registry:
+          - version: "3.1.1"
+            image: registry:3.1.1@sha256:1be55279f18a2fe1a74edf2664cac61c1bea305b7b4642dab412e7affdcb3e33
+          - version: "3.0.0"
+            image: registry:3.0.0@sha256:6c5666b861f3505b116bb9aa9b25175e71210414bd010d92035ff64018f9457e
     services:
       registry:
-        image: registry:3.1.1@sha256:1be55279f18a2fe1a74edf2664cac61c1bea305b7b4642dab412e7affdcb3e33
+        image: ${{ matrix.registry.image }}
         ports:
           - 5000:5000
         env:
@@ -97,17 +105,11 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Run genuine registry conformance
-        env:
-          MERIDIAN_OCI_TEST_ENDPOINT: http://127.0.0.1:5000
-          MERIDIAN_OCI_TEST_REPOSITORY: meridian-ci
-        run: uv run pytest tests/integration -m 'integration and not owner_service' --no-cov
-
       - name: Build candidate and install with released S3 in a clean environment
         run: |
           uv build --out-dir dist-runtime
           uv venv /tmp/oci-runtime-test
-          uv pip install --python /tmp/oci-runtime-test/bin/python "dist-runtime/meridian_storage_oci-1.0.3-py3-none-any.whl[test]" meridian-storage-s3==1.0.2
+          uv pip install --python /tmp/oci-runtime-test/bin/python "dist-runtime/meridian_storage_oci-1.1.0-py3-none-any.whl[test]" meridian-storage-s3==1.0.4
           uv pip check --python /tmp/oci-runtime-test/bin/python
       - name: Start disposable S3 endpoint for discovery coexistence
         run: |
@@ -123,12 +125,33 @@ jobs:
         env:
           MERIDIAN_OCI_TEST_ENDPOINT: http://127.0.0.1:5000
           MERIDIAN_OCI_TEST_REPOSITORY: meridian-installed
+          MERIDIAN_OCI_TEST_RELEASE: ${{ matrix.registry.version }}
+          MERIDIAN_OCI_TEST_IMAGE: ${{ matrix.registry.image }}
           MERIDIAN_S3_TEST_ENDPOINT: http://127.0.0.1:19000
         run: |
           mkdir -p /tmp/oci-runtime-verification
           cp -R tests /tmp/oci-runtime-verification/tests
+          cp pyproject.toml /tmp/oci-runtime-verification/pyproject.toml
           cd /tmp/oci-runtime-verification
-          /tmp/oci-runtime-test/bin/python -m pytest tests/integration -m 'not owner_service' --no-cov -o addopts= --import-mode=importlib
+          /tmp/oci-runtime-test/bin/python -m pytest tests/integration -m 'not owner_service' --no-cov -o addopts= --import-mode=importlib --junitxml=registry.xml
+
+      - name: Record independently observed registry binary and package closure
+        env:
+          REGISTRY_CONTAINER: ${{ job.services.registry.id }}
+          SELECTED_REGISTRY_IMAGE: ${{ matrix.registry.image }}
+        run: |
+          mkdir -p reports
+          docker exec "$REGISTRY_CONTAINER" registry --version > reports/registry-binary.txt
+          docker inspect "$REGISTRY_CONTAINER" --format '{{.Image}}' > reports/registry-image-id.txt
+          printenv SELECTED_REGISTRY_IMAGE > reports/registry-selected-image.txt
+          uv pip freeze --python /tmp/oci-runtime-test/bin/python > reports/installed-packages.txt
+          cp /tmp/oci-runtime-verification/registry.xml reports/
+      - name: Upload genuine registry evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: registry-${{ matrix.registry.version }}-evidence
+          path: reports/*
+          if-no-files-found: error
 
   package:
     name: Reproducible package artifacts
@@ -153,8 +176,8 @@ jobs:
         run: |
           uv build --out-dir dist-a
           uv build --out-dir dist-b
-          cmp dist-a/meridian_storage_oci-1.0.3-py3-none-any.whl dist-b/meridian_storage_oci-1.0.3-py3-none-any.whl
-          cmp dist-a/meridian_storage_oci-1.0.3.tar.gz dist-b/meridian_storage_oci-1.0.3.tar.gz
+          cmp dist-a/meridian_storage_oci-1.1.0-py3-none-any.whl dist-b/meridian_storage_oci-1.1.0-py3-none-any.whl
+          cmp dist-a/meridian_storage_oci-1.1.0.tar.gz dist-b/meridian_storage_oci-1.1.0.tar.gz
       - name: Verify artifacts and evidence
         run: |
           mkdir -p reports
@@ -165,10 +188,10 @@ jobs:
       - name: Install wheel in an isolated environment
         run: |
           uv venv /tmp/meridian-wheel-test
-          uv pip install --python /tmp/meridian-wheel-test/bin/python dist-a/meridian_storage_oci-1.0.3-py3-none-any.whl
+          uv pip install --python /tmp/meridian-wheel-test/bin/python dist-a/meridian_storage_oci-1.1.0-py3-none-any.whl
           uv pip check --python /tmp/meridian-wheel-test/bin/python
           cd /tmp
-          /tmp/meridian-wheel-test/bin/python -c "from meridian_storage.adapters.oci import __version__; assert __version__ == '1.0.3'"
+          /tmp/meridian-wheel-test/bin/python -c "from meridian_storage.adapters.oci import __version__; assert __version__ == '1.1.0'"
       - name: Upload package evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
