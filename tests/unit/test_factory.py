@@ -259,3 +259,17 @@ def test_construction_failure_cleans_ca(monkeypatch):
     with pytest.raises(RuntimeError, match="creation failed"):
         runtime.open()
     assert runtime._ca_directory is None
+
+
+def test_selected_provenance_startup_and_expected_fingerprint_drift(clients):
+    binding = binding_config(
+        registry_release="unlisted", registry_image="registry@sha256:" + "a" * 64
+    )
+    runtime = core_runtime(binding)
+    runtime.start()
+    runtime.close()
+    changed = replace(binding, settings=dict(binding.settings, registryRelease="another"))
+    runtime = core_runtime(changed)
+    with pytest.raises(Exception, match="[Cc]apability|[Ff]ingerprint"):
+        runtime.start()
+    runtime.close()

@@ -2,6 +2,17 @@
 
 # Changelog
 
+
+## 1.1.0 — 2026-09-08
+
+- Separate deployment-selected registry release/image provenance from the legacy
+  Distribution 1.1.1 protocol identity; report unavailable observations honestly.
+- Preserve legacy canonical manifests, validate actual SPI/profile/protocol and
+  image integrity, and retain required provider feature and drift failures.
+- Resolve Core 1.1.0/Object Common 1.0.3 through public API compatibility bounds.
+- Test two independently selected registry releases, public Object/Core paths,
+  negative required-referrers behavior, and released S3 coexistence.
+
 ## 1.0.3
 
 - Restore normal Core discovery using a private no-argument AdapterFactory and the released runtime/session SPI.

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import secrets
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -12,7 +13,7 @@ from meridian_storage.spi import CapabilityManifest
 
 from .._json import canonical_json
 from .._naming import object_id_hash
-from ..descriptor import configured_capability_manifest
+from ..descriptor import OCI_DISTRIBUTION_VERSION, configured_capability_manifest
 from ..transport import (
     EMPTY_JSON,
     MERIDIAN_OBJECT_ARTIFACT_TYPE,
@@ -37,6 +38,8 @@ class OciProbeReport:
     failure: str | None = None
 
     def to_dict(self) -> dict[str, JsonValue]:
+        selected = self.capability_manifest.extensions.get("selectedRegistry", {})
+        assert isinstance(selected, Mapping)
         return {
             "formatVersion": "meridian.oci-probe.v1",
             "passed": self.passed,
@@ -50,6 +53,12 @@ class OciProbeReport:
             },
             "capabilityFingerprint": self.capability_manifest.fingerprint,
             "failure": self.failure,
+            "registryProvenance": {
+                "distributionSpec": OCI_DISTRIBUTION_VERSION,
+                "selected": dict(selected),
+                "observedRelease": None,
+                "observationStatus": "unavailable",
+            },
         }
 
 

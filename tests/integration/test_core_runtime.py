@@ -24,12 +24,18 @@ from ..support.core import binding_config, core_runtime
 
 
 @pytest.mark.integration
-def test_normal_core_object_runtime():
+@pytest.mark.parametrize("selected_provenance", [False, True])
+def test_normal_core_object_runtime(selected_provenance):
     endpoint = os.getenv("MERIDIAN_OCI_TEST_ENDPOINT")
     repository = os.getenv("MERIDIAN_OCI_TEST_REPOSITORY")
     if not endpoint or not repository:
         pytest.skip("a disposable OCI registry endpoint and repository are required")
-    binding = binding_config(endpoint, repository + "/core-" + secrets.token_hex(8))
+    binding = binding_config(
+        endpoint,
+        repository + "/core-" + secrets.token_hex(8),
+        registry_release=os.getenv("MERIDIAN_OCI_TEST_RELEASE") if selected_provenance else None,
+        registry_image=os.getenv("MERIDIAN_OCI_TEST_IMAGE") if selected_provenance else None,
+    )
     runtime = core_runtime(binding)
     payloads = default_payload_registry()
     content = b"resource-store-compatible-object-stream"

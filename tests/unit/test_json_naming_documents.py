@@ -96,5 +96,5 @@ def test_packaged_compatibility_evidence_is_available() -> None:
     document = compatibility_document()
 
     assert document["adapterId"] == "oci-distribution"
-    assert document["objectCommon"]["version"] == "1.0.2"  # type: ignore[index]
+    assert document["objectCommon"]["version"] == "1.0.3"  # type: ignore[index]
     assert document["design"]["hldRevision"] == 56  # type: ignore[index]

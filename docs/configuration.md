@@ -105,3 +105,33 @@ configuration-sensitive fingerprints without exposing endpoints or repositories.
 The bridge uses Object Common's process-local default payload registry, matching
 ResourceStore's normal Object path. Explicit private binding APIs retain their
 existing custom credential and cursor-key options.
+
+## Protocol and registry release selection (1.1.0)
+
+`Binding.engineVersion` remains the **OCI Distribution specification** `1.1.1`.
+It must not contain a registry software version such as `3.1.1`. The factory
+checks the Adapter SPI `1.0.0`, `oci-distribution` profile and this protocol
+independently of deployment-selected releases.
+
+The optional private settings `registryRelease` and `registryImage` map to
+`OciDistributionBinding.registry_release` and `.registry_image`. The former is
+a nonempty bounded provenance label, not an allowlist entry. The latter must be
+an immutable image reference ending in `@sha256:<64 lowercase hex characters>`.
+Deployment still owns image resolution and verifies the selected artifact.
+
+These settings appear as `selectedRegistry` in configured capability extensions.
+Selecting or changing them changes the canonical capability fingerprint; render
+the deployment's expected fingerprint from that same configuration. Startup
+continues to reject mismatched expectations. With both settings omitted, the
+legacy manifest and fingerprint remain byte-for-byte equivalent to the public
+OCI 1.0.3 golden fixture. No persisted field changes meaning.
+
+The probe report adds `registryProvenance` to its v1 document. `observedRelease`
+is null and `observationStatus` is `unavailable`: the Distribution API does not
+provide a portable authenticated registry software version endpoint. The optional
+`Docker-Distribution-Api-Version` header is an API marker, never a software
+release or proof of Distribution 1.1.1 feature conformance. Configured release
+labels are never copied into observed evidence. The CI fixture records the
+actual `registry --version` and running image identity separately through the
+container runtime. This out-of-band observation does not become an adapter API
+claim. Probe features continue to reflect real operations.

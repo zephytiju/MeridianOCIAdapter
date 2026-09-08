@@ -29,7 +29,10 @@ from meridian_storage.spi import (
 from ._version import __version__
 from .adapter import OciDistributionAdapter
 from .descriptor import (
+    ADAPTER_CONTRACT_VERSION,
     ADAPTER_ID,
+    ENGINE_PROFILE,
+    OCI_DISTRIBUTION_VERSION,
     AnonymousCredentials,
     BasicCredentials,
     BearerCredentials,
@@ -41,6 +44,8 @@ from .probe import OciDistributionProbe
 # namespaces, credentials and TLS material come from their Core-owned fields.
 _SETTINGS = {
     "resource": "resource",
+    "registryRelease": "registry_release",
+    "registryImage": "registry_image",
     "chunkSize": "chunk_size",
     "maxObjectBytes": "max_object_bytes",
     "maxRangeBytes": "max_range_bytes",
@@ -69,6 +74,13 @@ class OciAdapterFactory:
             raise ObjectInvalidRequest(
                 "OCI factory requires an OCI binding with a resolved endpoint"
             )
+        if binding.adapter_contract != ADAPTER_CONTRACT_VERSION:
+            raise ObjectCapabilityMismatch("unsupported OCI Adapter SPI contract")
+        if binding.engine_profile != ENGINE_PROFILE:
+            raise ObjectCapabilityMismatch("unsupported OCI engine profile")
+        # Legacy engineVersion is the Distribution protocol, never registry software.
+        if binding.engine_version != OCI_DISTRIBUTION_VERSION:
+            raise ObjectCapabilityMismatch("OCI requires Distribution specification 1.1.1")
         settings = binding.settings
         if set(settings) - {*_SETTINGS, "authMode"} or "resource" not in settings:
             raise ObjectInvalidRequest("OCI binding requires resource and only supported settings")
@@ -138,7 +150,12 @@ class _Runtime:
                 raise ObjectUnavailable("OCI authenticated startup probe failed")
             self._probe = AdapterProbe(
                 report.capability_manifest,
-                {"authenticated": "true", "apiVersion": report.api_version},
+                {
+                    "authenticated": "true",
+                    "apiVersion": report.api_version,
+                    "distributionSpec": OCI_DISTRIBUTION_VERSION,
+                    "registryReleaseObservation": "unavailable",
+                },
             )
         except BaseException:
             self.close()
@@ -229,6 +246,18 @@ class _Session:
                 "capabilityFingerprint": manifest.fingerprint,
                 "engineProfile": manifest.engine_profile,
                 "engineVersion": manifest.engine_version,
+                "distributionSpec": OCI_DISTRIBUTION_VERSION,
+                "registryReleaseObservation": "unavailable",
+                **(
+                    {"selectedRegistryRelease": self._runtime._binding.registry_release}
+                    if self._runtime._binding.registry_release is not None
+                    else {}
+                ),
+                **(
+                    {"selectedRegistryImage": self._runtime._binding.registry_image}
+                    if self._runtime._binding.registry_image is not None
+                    else {}
+                ),
             },
         )
 
