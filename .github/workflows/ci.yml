@@ -112,10 +112,13 @@ jobs:
           uv pip install --python /tmp/oci-runtime-test/bin/python "dist-runtime/meridian_storage_oci-1.1.0-py3-none-any.whl[test]" meridian-storage-s3==1.0.4
           uv pip check --python /tmp/oci-runtime-test/bin/python
       - name: Start disposable S3 endpoint for discovery coexistence
+        # minio/minio was removed from Docker Hub (repository deleted upstream);
+        # the Bitnami legacy mirror of the same MinIO server is pinned by digest
+        # instead. It runs non-root, so the data directory is /bitnami/minio/data.
         run: |
           docker run --rm -d --name oci-coexist-s3 -p 19000:9000 \
             -e MINIO_ROOT_USER=meridian-test -e MINIO_ROOT_PASSWORD=meridian-test-password \
-            minio/minio@sha256:a1ea29fa28355559ef137d71fc570e508a214ec84ff8083e39bc5428980b015e server /data
+            bitnamilegacy/minio@sha256:6dabb4a2088c9a79908de3bc05f4586c23ad2182c8908e7e3acbf61c1467fb20 server /bitnami/minio/data
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:19000/minio/health/ready; then exit 0; fi
             sleep 1
