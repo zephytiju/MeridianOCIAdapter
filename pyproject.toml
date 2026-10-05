@@ -24,8 +24,8 @@ classifiers = [
 ]
 dependencies = [
   "httpx>=0.28.1,<0.29",
-  "meridian-storage-core>=1.1,<2",
-  "meridian-storage-object-common>=1.0.3,<2",
+  "meridian-storage-core>=1,<2",
+  "meridian-storage-object-common>=1,<2",
 ]
 
 [project.optional-dependencies]
